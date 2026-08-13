@@ -1,0 +1,28 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: petclinic-alertmanager-config
+  namespace: monitoring
+  labels:
+    alertmanagerConfig: petclinic
+spec:
+  route:
+    groupBy:
+      - alertname
+      - namespace
+    groupWait: 10s
+    groupInterval: 5m
+    repeatInterval: 4h
+    receiver: email
+
+  receivers:
+    - name: email
+      emailConfigs:
+        - to: "muhdadif369@gmail.com"
+          from: "muhdadif369@gmail.com"
+          smarthost: "smtp.gmail.com:587"
+          authUsername: "muhdadif369@gmail.com"
+          authPassword:
+            name: alertmanager-smtp
+            key: smtp-auth-password
+          sendResolved: true

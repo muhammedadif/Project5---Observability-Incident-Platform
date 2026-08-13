@@ -1,0 +1,7 @@
+alertmanager:
+  alertmanagerSpec:
+    secrets:
+      - alertmanager-smtp
+
+    alertmanagerConfiguration:
+      name: petclinic-alertmanager-config
