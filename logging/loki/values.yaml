@@ -1,0 +1,71 @@
+deploymentMode: SingleBinary
+
+loki:
+  auth_enabled: false
+
+  commonConfig:
+    replication_factor: 1
+
+  storage:
+    type: s3
+
+    bucketNames:
+      chunks: production-observability-loki-chunks-134163282485-e48cb0e1
+      ruler: production-observability-loki-ruler-134163282485-e48cb0e1
+
+    s3:
+      region: us-east-1
+
+  schemaConfig:
+    configs:
+      - from: "2026-01-01"
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+
+singleBinary:
+  replicas: 1
+
+  persistence:
+    enabled: true
+    storageClass: gp3
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+
+chunksCache:
+  enabled: false
+
+resultsCache:
+  enabled: false
+
+serviceAccount:
+  create: true
+  name: loki
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::134163282485:role/production-observability-loki-role
+
+read:
+  replicas: 0
+
+write:
+  replicas: 0
+
+backend:
+  replicas: 0
+
+gateway:
+  enabled: false
+
+monitoring:
+  selfMonitoring:
+    enabled: false
+
+  dashboards:
+    enabled: false
+
+test:
+  enabled: false
