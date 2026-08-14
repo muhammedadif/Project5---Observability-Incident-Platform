@@ -1,0 +1,40 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: petclinic-slo
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  groups:
+    - name: petclinic.slo.rules
+      rules:
+
+        - record: petclinic:sli_requests:good_rate
+          expr: |
+            sum(
+              rate(
+                http_server_requests_seconds_count{
+                  namespace="petclinic-helm",
+                  uri!~"/actuator.*",
+                  outcome="SUCCESS"
+                }[5m]
+              )
+            )
+
+        - record: petclinic:sli_requests:total_rate
+          expr: |
+            sum(
+              rate(
+                http_server_requests_seconds_count{
+                  namespace="petclinic-helm",
+                  uri!~"/actuator.*"
+                }[5m]
+              )
+            )
+
+        - record: petclinic:sli_availability:ratio
+          expr: |
+            petclinic:sli_requests:good_rate
+            /
+            petclinic:sli_requests:total_rate

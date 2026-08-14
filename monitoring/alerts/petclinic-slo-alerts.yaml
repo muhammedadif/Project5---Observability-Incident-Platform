@@ -1,0 +1,153 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: petclinic-slo-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  groups:
+    - name: petclinic.slo.alerts
+      rules:
+
+        - alert: PetclinicSLOBurnRateCritical
+          expr: |
+            (
+              sum(
+                rate(
+                  http_server_requests_seconds_count{
+                    namespace="petclinic-helm",
+                    uri!~"/actuator.*"
+                  }[5m]
+                )
+              ) > 0
+            )
+            and
+            (
+              (
+                1 -
+                (
+                  sum(
+                    rate(
+                      http_server_requests_seconds_count{
+                        namespace="petclinic-helm",
+                        uri!~"/actuator.*",
+                        outcome="SUCCESS"
+                      }[5m]
+                    )
+                  )
+                  /
+                  sum(
+                    rate(
+                      http_server_requests_seconds_count{
+                        namespace="petclinic-helm",
+                        uri!~"/actuator.*"
+                      }[5m]
+                    )
+                  )
+                )
+              ) / 0.001 >= 14.4
+            )
+            and
+            (
+              (
+                1 -
+                (
+                  sum(
+                    rate(
+                      http_server_requests_seconds_count{
+                        namespace="petclinic-helm",
+                        uri!~"/actuator.*",
+                        outcome="SUCCESS"
+                      }[1h]
+                    )
+                  )
+                  /
+                  sum(
+                    rate(
+                      http_server_requests_seconds_count{
+                        namespace="petclinic-helm",
+                        uri!~"/actuator.*"
+                      }[1h]
+                    )
+                  )
+                )
+              ) / 0.001 >= 14.4
+            )
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "PetClinic is burning its SLO error budget rapidly"
+            description: "PetClinic availability is consuming the 99.9% SLO error budget at a critical burn rate. Both the 5-minute and 1-hour burn-rate windows are at or above 14.4x."
+
+        - alert: PetclinicSLOBurnRateWarning
+          expr: |
+            (
+              sum(
+                rate(
+                  http_server_requests_seconds_count{
+                    namespace="petclinic-helm",
+                    uri!~"/actuator.*"
+                  }[5m]
+                )
+              ) > 0
+            )
+            and
+            (
+              (
+                1 -
+                (
+                  sum(
+                    rate(
+                      http_server_requests_seconds_count{
+                        namespace="petclinic-helm",
+                        uri!~"/actuator.*",
+                        outcome="SUCCESS"
+                      }[30m]
+                    )
+                  )
+                  /
+                  sum(
+                    rate(
+                      http_server_requests_seconds_count{
+                        namespace="petclinic-helm",
+                        uri!~"/actuator.*"
+                      }[30m]
+                    )
+                  )
+                )
+              ) / 0.001 >= 6
+            )
+            and
+            (
+              (
+                1 -
+                (
+                  sum(
+                    rate(
+                      http_server_requests_seconds_count{
+                        namespace="petclinic-helm",
+                        uri!~"/actuator.*",
+                        outcome="SUCCESS"
+                      }[6h]
+                    )
+                  )
+                  /
+                  sum(
+                    rate(
+                      http_server_requests_seconds_count{
+                        namespace="petclinic-helm",
+                        uri!~"/actuator.*"
+                      }[6h]
+                    )
+                  )
+                )
+              ) / 0.001 >= 6
+            )
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "PetClinic is consuming its SLO error budget"
+            description: "PetClinic availability is consuming the 99.9% SLO error budget at a sustained warning burn rate. Both the 30-minute and 6-hour burn-rate windows are at or above 6x."
